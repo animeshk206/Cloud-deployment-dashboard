@@ -1,42 +1,31 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: cloudops-deployment
+  name: postgres-deployment
 spec:
-  replicas: 1
   selector:
     matchLabels:
-      app: cloudops
+      app: postgres
+  serviceName: postgres-service
+  replicas: 1
   template:
     metadata:
       labels:
-        app: cloudops
+        app: postgres
     spec:
       containers:
-        - name: cloudops-container
-          image: animesh268/cloudops-dashboard:v8
-          resources:
+      - name: postgres
+        image: postgres:15
+        resources:
             requests:
-              memory: "128Mi"
-              cpu: "100m"
+              memory: "512Mi"
+              cpu: "250m"
             limits:
-              memory: "256Mi"
-              cpu: "500m"
-          ports:
-            - containerPort: 8000
-          livenessProbe: 
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          readinessProbe:
-            httpGet: 
-              path: /health
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          env:
+              memory: "1Gi"
+              cpu: "1"
+        ports:
+          - containerPort: 5432
+        env: 
             - name: DB_HOST
               value: postgres-service
             - name: POSTGRES_DB
@@ -54,4 +43,14 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
- 
+        volumeMounts: 
+          - name: postgres-storage
+            mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
