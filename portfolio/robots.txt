@@ -1,4 +1,0 @@
-User-agent: *
-Disallow: /icons/
-Disallow: /images/projects/
-Disallow: /resume.pdf
